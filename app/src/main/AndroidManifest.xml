@@ -10,9 +10,13 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault" >
+
+        <!--com o parametro launchMode, impede que abra varias instancias do aplicativo-->
+        <!--caso tenha uma instancia rodando, ele sobreescreve a prioridade da tarefa -->
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

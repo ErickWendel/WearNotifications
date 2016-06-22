@@ -2,7 +2,8 @@ package br.com.erickwendel.wearnotifications;
 
 import android.app.Activity;
 import android.app.Notification;
-import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,21 +18,19 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
-    private TextView mTextView;
 
     //notification manager
     NotificationManagerCompat mNotificationManager;
 
-    Button mButton;
-    int NOTIFICATION_ID_1 = 1;
-    int NOTIFICATION_ID_2 = 2;
-    int NOTIFICATION_ID_3 = 3;
-    int NOTIFICATION_ID_4 = 4;
-    int NOTIFICATION_ID_5 = 5;
-    int NOTIFICATION_ID_6 = 6;
-    int NOTIFICATION_ID_7 = 7;
-    String NOTIFICATION_TAG = "Minha Notificação";
-    String GROUP = "NotificationGroup";
+    final int NOTIFICATION_ID_1 = 1;
+    final int NOTIFICATION_ID_2 = 2;
+    final int NOTIFICATION_ID_3 = 3;
+    final int NOTIFICATION_ID_4 = 4;
+    final int NOTIFICATION_ID_5 = 5;
+    final int NOTIFICATION_ID_6 = 6;
+    final int NOTIFICATION_ID_7 = 7;
+    final String  NOTIFICATION_TAG = "Minha Notificação";
+    final String GROUP = "NotificationGroup";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +51,25 @@ public class MainActivity extends Activity {
                     .setStyle(getNotificationImage())
                     .setContentText("Com imagens");
 
-            //constroi a notificacões de texto (simples)
+            //constroi a notificacões com imagem de fundo
             NotificationCompat.Builder notificationBackGround = getNotificationBuilder()
                     .extend(getNotificationBackGroundImage());
+
+            //notificacao com açao para abrir uma acao
+            NotificationCompat.Builder notificationIntent = getNotificationIntent();
+
+            //notificacao para abrir diversas acoes
+            NotificationCompat.Builder notificationMultiplesActions = getNotificationMultiplesActions();
+
+            //envia notificacao com paginas
+
+            List<Notification> pages = new ArrayList<>();
+            pages.add(notificationText.build());
+            pages.add(notificationImage.build());
+            pages.add(notificationBackGround.build());
+
+            NotificationCompat.Builder notificationPages = sendNotificationWithPages(pages);
+
 
 
             //dispara as notificacões
@@ -64,18 +79,17 @@ public class MainActivity extends Activity {
 
             mNotificationManager.notify(NOTIFICATION_TAG, NOTIFICATION_ID_3, notificationBackGround.build());
 
+            mNotificationManager.notify(NOTIFICATION_TAG, NOTIFICATION_ID_4, notificationPages.build());
+
+            mNotificationManager.notify(NOTIFICATION_TAG, NOTIFICATION_ID_5, notificationIntent.build());
+
+                mNotificationManager.notify(NOTIFICATION_TAG, NOTIFICATION_ID_6, notificationMultiplesActions.build());
+
             //atualiza notificacoes
             updateNotification();
 
-
-            //envia notificacao com paginas
-
-            List<Notification> pages = new ArrayList<>();
-            pages.add(notificationText.build());
-            pages.add(notificationImage.build());
-            pages.add(notificationBackGround.build());
-
-            sendNotificationWithPages(pages);
+            //remove notificacao escolhida
+            removeNotification(NOTIFICATION_ID_2, NOTIFICATION_TAG);
 
 
             //fecha o aplicativo enviando a mensagem
@@ -97,6 +111,36 @@ public class MainActivity extends Activity {
         return notification;
     }
 
+    private NotificationCompat.Builder getNotificationIntent() {
+
+        //reabre o aplicativo
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        return getNotificationBuilder()
+                .setContentIntent(pendingIntent)
+                .setContentText("Notificação clicavel");
+    }
+
+    private NotificationCompat.Builder getNotificationMultiplesActions(){
+        Intent action1 = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent1 = PendingIntent.getActivity(this, 0, action1, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent action2 = new Intent(Intent.ACTION_DIAL);
+        PendingIntent pendingIntent2 = PendingIntent.getActivity(this, 0, action2, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(this)
+                .setContentText("Multiple Actions")
+                .setContentTitle("Notification")
+                .setSmallIcon(R.drawable.ic_goku)
+                .addAction(R.drawable.ic_goku_background, "Abrir Aplicativo", pendingIntent1)
+                .addAction(R.drawable.ic_goku_head, "Ligar", pendingIntent2);
+
+        return notification;
+
+
+
+    }
     private NotificationCompat.WearableExtender getNotificationBackGroundImage() {
         NotificationCompat.WearableExtender extender = new NotificationCompat
                 .WearableExtender()
@@ -122,7 +166,17 @@ public class MainActivity extends Activity {
 
         return imageStyle;
     }
-
+    private void removeNotification(Integer id, String tag) {
+        Handler handler = new Handler();
+        final Integer idItem = id;
+        final String tagItem = tag;
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mNotificationManager.cancel(tagItem, idItem);
+            }
+        }, 5000);
+    }
     private void updateNotification() {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -139,19 +193,18 @@ public class MainActivity extends Activity {
         }, 5000);
     }
 
-    private void sendNotificationWithPages(List<Notification> pages) {
+    private NotificationCompat.Builder sendNotificationWithPages(List<Notification> pages) {
         NotificationCompat.WearableExtender extender = new NotificationCompat
                 .WearableExtender()
                 .addPages(pages);
 
-        Notification notification = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_goku)
                 .setContentTitle("Testing pages")
                 .setContentText("With pages")
-                .extend(extender)
-                .build();
+                .extend(extender);
 
-        mNotificationManager.notify(NOTIFICATION_ID_4, notification);
+        return notification;
 
     }
 
